@@ -6,13 +6,6 @@ FIELD_SIZE = 10**5
 
 
 def reconstruct_secret(shares):
-    """
-    Combines individual shares (points on graph)
-    using Lagranges interpolation.
-
-    `shares` is a list of points (x, y) belonging to a
-    polynomial with a constant of our key.
-    """
     sums = 0
     prod_arr = []
 
@@ -32,10 +25,6 @@ def reconstruct_secret(shares):
 
 
 def polynom(x, coefficients):
-    """
-    This generates a single point on the graph of given polynomial
-    in `x`. The polynomial is given by the list of `coefficients`.
-    """
     point = 0
     # Loop through reversed list, so that indices from enumerate match the
     # actual coefficient indices
@@ -45,27 +34,12 @@ def polynom(x, coefficients):
 
 
 def coeff(t, secret):
-    """
-    Randomly generate a list of coefficients for a polynomial with
-    degree of `t` - 1, whose constant is `secret`.
-
-    For example with a 3rd degree coefficient like this:
-        3x^3 + 4x^2 + 18x + 554
-
-        554 is the secret, and the polynomial degree + 1 is 
-        how many points are needed to recover this secret. 
-        (in this case it's 4 points).
-    """
     coeff = [random.randrange(0, FIELD_SIZE) for _ in range(t - 1)]
     coeff.append(secret)
     return coeff
 
 
 def generate_shares(n, m, secret):
-    """
-    Split given `secret` into `n` shares with minimum threshold
-    of `m` shares to recover this `secret`, using SSS algorithm.
-    """
     coefficients = coeff(m, secret)
     shares = []
 
