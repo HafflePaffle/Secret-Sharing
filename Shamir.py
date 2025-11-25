@@ -1,8 +1,13 @@
 import random
-from math import ceil
+import math
 from decimal import Decimal
+#To-do list: Make sure it can take in secrets of any size
+# Make sure it can take in secrets of any type (int, str, bytes, etc.)
+# Make sure the coefficients generation is efficient
+# Implement hashing
+# Implement syndrome decoding
 
-FIELD_SIZE = 10**5
+FIELD_SIZE = 10**5 #Base field size
 
 
 def reconstruct_secret(shares):
@@ -34,12 +39,18 @@ def polynom(x, coefficients):
 
 
 def coeff(t, secret):
-    coeff = [random.randrange(0, FIELD_SIZE) for _ in range(t - 1)]
-    coeff.append(secret)
+    for b in secret:
+        coeff = [random.randrange(0, FIELD_SIZE) for _ in range(t - 1)]
+        coeff.append(b)
     return coeff
 
 
 def generate_shares(n, m, secret):
+    # global FIELD_SIZE
+    # print(FIELD_SIZE)
+    # if(FIELD_SIZE <= secret):
+    #     FIELD_SIZE = 10 ** (int(math.log10(secret))) * 10
+    #     print(FIELD_SIZE)
     coefficients = coeff(m, secret)
     shares = []
 
@@ -53,13 +64,14 @@ def generate_shares(n, m, secret):
 # Driver code
 if __name__ == '__main__':
 
-    # (3,5) sharing scheme
     t, n = 3, 5
-    secret = 1234
+    secret = "Manchego"
     print(f'Original Secret: {secret}')
 
     # Phase I: Generation of shares
-    shares = generate_shares(n, t, secret)
+    bytes = secret.encode('utf-8')
+    print(f'Integer Secret: {list(bytes)}')
+    shares = generate_shares(n, t, bytes)
     print(f'Shares: {", ".join(str(share) for share in shares)}')
 
     # Phase II: Secret Reconstruction
