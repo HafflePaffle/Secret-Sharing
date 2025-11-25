@@ -1,58 +1,96 @@
 import random
-from typing import List, Tuple
+from math import ceil
+from decimal import Decimal
+
+FIELD_SIZE = 10**5
 
 
-# Function to generate a random polynomial
-def generate_coefficients(secret: int, threshold: int) -> List[int]:
-    coefficients = [secret]
-    for _ in range(threshold - 1):
-        coefficients.append(random.randint(1, 256))
-    return coefficients
+def reconstruct_secret(shares):
+    """
+    Combines individual shares (points on graph)
+    using Lagranges interpolation.
+
+    `shares` is a list of points (x, y) belonging to a
+    polynomial with a constant of our key.
+    """
+    sums = 0
+    prod_arr = []
+
+    for j, share_j in enumerate(shares):
+        xj, yj = share_j
+        prod = Decimal(1)
+
+        for i, share_i in enumerate(shares):
+            xi, _ = share_i
+            if i != j:
+                prod *= Decimal(Decimal(xi)/(xi-xj))
+
+        prod *= yj
+        sums += Decimal(prod)
+
+    return int(round(Decimal(sums), 0))
 
 
-# Function to create shares
-def create_shares(
-    secret: int, total_shares: int, threshold: int
-) -> List[Tuple[int, int]]:
-    coefficients = generate_coefficients(secret, threshold)
+def polynom(x, coefficients):
+    """
+    This generates a single point on the graph of given polynomial
+    in `x`. The polynomial is given by the list of `coefficients`.
+    """
+    point = 0
+    # Loop through reversed list, so that indices from enumerate match the
+    # actual coefficient indices
+    for coefficient_index, coefficient_value in enumerate(coefficients[::-1]):
+        point += x ** coefficient_index * coefficient_value
+    return point
+
+
+def coeff(t, secret):
+    """
+    Randomly generate a list of coefficients for a polynomial with
+    degree of `t` - 1, whose constant is `secret`.
+
+    For example with a 3rd degree coefficient like this:
+        3x^3 + 4x^2 + 18x + 554
+
+        554 is the secret, and the polynomial degree + 1 is 
+        how many points are needed to recover this secret. 
+        (in this case it's 4 points).
+    """
+    coeff = [random.randrange(0, FIELD_SIZE) for _ in range(t - 1)]
+    coeff.append(secret)
+    return coeff
+
+
+def generate_shares(n, m, secret):
+    """
+    Split given `secret` into `n` shares with minimum threshold
+    of `m` shares to recover this `secret`, using SSS algorithm.
+    """
+    coefficients = coeff(m, secret)
     shares = []
-    for x in range(1, total_shares + 1):
-        y = sum(coeff * (x**exp) for exp, coeff in enumerate(coefficients))
-        shares.append((x, y))
+
+    for i in range(1, n+1):
+        x = random.randrange(1, FIELD_SIZE)
+        shares.append((x, polynom(x, coefficients)))
+
     return shares
 
 
-# Function to reconstruct the secret
-def reconstruct_secret(shares: List[Tuple[int, int]], threshold: int) -> int:
-    def _lagrange_interpolation(x: int, x_s: List[int], y_s: List[int]) -> int:
-        def _basis(j: int) -> int:
-            num = 1
-            den = 1
-            for m in range(len(x_s)):
-                if m != j:
-                    num *= x - x_s[m]
-                    den *= x_s[j] - x_s[m]
-            return num // den
+# Driver code
+if __name__ == '__main__':
 
-        result = 0
-        for j in range(len(y_s)):
-            result += y_s[j] * _basis(j)
-        return result
-
-    x_s, y_s = zip(*shares)
-    return _lagrange_interpolation(0, x_s, y_s)
-
-
-# Example usage
-if __name__ == "__main__":
+    # (3,5) sharing scheme
+    t, n = 3, 5
     secret = 1234
-    total_shares = 5
-    threshold = 3
+    print(f'Original Secret: {secret}')
 
-    shares = create_shares(secret, total_shares, threshold)
-    print("Shares:", shares)
+    # Phase I: Generation of shares
+    shares = generate_shares(n, t, secret)
+    print(f'Shares: {", ".join(str(share) for share in shares)}')
 
-    # Select any 'threshold' number of shares to reconstruct the secret
-    selected_shares = shares[:threshold]
-    recovered_secret = reconstruct_secret(selected_shares, threshold)
-    print("Recovered Secret:", recovered_secret)
+    # Phase II: Secret Reconstruction
+    # Picking t shares randomly for
+    # reconstruction
+    pool = random.sample(shares, t)
+    print(f'Combining shares: {", ".join(str(share) for share in pool)}')
+    print(f'Reconstructed secret: {reconstruct_secret(pool)}')
