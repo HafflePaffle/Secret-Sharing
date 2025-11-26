@@ -71,8 +71,8 @@ def reconstruct_secret(shares):
 
 
 if __name__ == '__main__':
-    t, n = 3, 5
-    
+    t, n = 5, 7
+
     secret = ""
     with open('sample.txt', 'rb') as f:
         secret = f.read()
@@ -80,13 +80,10 @@ if __name__ == '__main__':
     #secret = "ManchegoManchegoManchegoManchegoManchegoManchegoManchegoManchegoManchego"
     print(f'Original Secret: {secret}')
 
-    secret = hashlib.sha256(secret).hexdigest().encode('utf-8')
-    print(f'SHA-256 Hash: {secret}')
-
     # Phase I: Generation of shares
     #secret_bytes = list(secret.encode('utf-8'))
     secret_bytes = list(secret)
-    #print(f'Byte values: {secret_bytes}')
+    print(f'Byte values: {secret_bytes}')
     
     shares = generate_shares(n, t, secret_bytes)
     print(f'Number of shares: {len(shares)}')
@@ -97,7 +94,7 @@ if __name__ == '__main__':
     print(f'Using {len(pool)} shares for reconstruction')
     
     reconstructed_bytes = reconstruct_secret(pool)
-    print(f'Reconstructed bytes: {reconstructed_bytes}')
+    #print(f'Reconstructed bytes: {reconstructed_bytes}')
     
     try:
         reconstructed_secret = bytes(reconstructed_bytes).decode('utf-8')
