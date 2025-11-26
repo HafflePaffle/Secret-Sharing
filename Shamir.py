@@ -72,13 +72,16 @@ def reconstruct_secret(shares):
 
 if __name__ == '__main__':
     t, n = 3, 5
+    
     secret = ""
-    with open('pdf_bytes.txt', 'rb') as f:
+    with open('sample.txt', 'rb') as f:
         secret = f.read()
+    
     #secret = "ManchegoManchegoManchegoManchegoManchegoManchegoManchegoManchegoManchego"
-    #print(f'Original Secret: {secret}')
-    # secret = hashlib.sha256(secret.encode('utf-8')).hexdigest()
-    # print(f'SHA-256 Hash: {secret}')
+    print(f'Original Secret: {secret}')
+
+    secret = hashlib.sha256(secret).hexdigest().encode('utf-8')
+    print(f'SHA-256 Hash: {secret}')
 
     # Phase I: Generation of shares
     #secret_bytes = list(secret.encode('utf-8'))
@@ -94,10 +97,10 @@ if __name__ == '__main__':
     print(f'Using {len(pool)} shares for reconstruction')
     
     reconstructed_bytes = reconstruct_secret(pool)
-    #print(f'Reconstructed bytes: {reconstructed_bytes}')
+    print(f'Reconstructed bytes: {reconstructed_bytes}')
     
     try:
         reconstructed_secret = bytes(reconstructed_bytes).decode('utf-8')
-        #print(f'Reconstructed secret: "{reconstructed_secret}"')
+        print(f'Reconstructed secret: "{reconstructed_secret}"')
     except UnicodeDecodeError:
         print("Error: Could not decode bytes to string")
